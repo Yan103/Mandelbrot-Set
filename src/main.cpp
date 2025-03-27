@@ -3,6 +3,8 @@
 
 //! g++ src/main.cpp -l sfml-graphics -l sfml-window -l sfml-system
 
+
+
 const unsigned WIDTH  = 500;
 const unsigned HEIGHT = 500;
 
