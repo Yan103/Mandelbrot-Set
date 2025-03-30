@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <SFML/Graphics.hpp>
+#include <immintrin.h>
 
 #include "Tools.h"
 
@@ -32,6 +33,8 @@ const float         TEXT_POSITION          = 10;
 void KeyboardPressAction(sf::RenderWindow* window, int* x_center, int* y_center, float* zoom);
 
 void MadelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center, float zoom);
+
+void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center, float zoom);
 
 ReturnCodes DrawMandelbrot(const char* font_name);
 

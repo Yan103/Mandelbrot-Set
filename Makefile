@@ -7,7 +7,7 @@ SOURCES   = $(wildcard $(SRC_DIR)/*.cpp)
 INCLUDES  = $(wildcard $(INC_DIR)/*.h)
 OBJECTS   = $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 EXECUTABLE= $(BIN_DIR)/a
-CXXFLAGS = -I$(INC_DIR) -O3
+CXXFLAGS = -I$(INC_DIR) -mavx2 -mfma -O3
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
 all: $(EXECUTABLE)

@@ -53,6 +53,60 @@ void MadelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center,
     }
 }
 
+void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center, float zoom) {
+    assert(pixels != NULL && "Null pointer was passed!\n"); 
+
+    for (int y = 0; y < HEIGHT; ++y) {
+        for (int x = 0; x < WIDTH; x += 8) {
+            __m256 x0 = _mm256_set_ps(((x + 7) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 6) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 5) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 4) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 3) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 2) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 1) - WIDTH  / 2 + x_center) / zoom,
+                                      ((x + 0) - WIDTH  / 2 + x_center) / zoom);
+            __m256 y0 = _mm256_set1_ps((y      - HEIGHT / 2 + y_center) / zoom);
+
+            __m256 xn = _mm256_set1_ps(0), yn = _mm256_set1_ps(0);
+            __m256 x2 = _mm256_set1_ps(0), y2 = _mm256_set1_ps(0), xy = _mm256_set1_ps(0);
+            
+            __m256i _1         = _mm256_set1_epi32(1);
+            __m256i iterations = _mm256_setzero_si256();
+
+            for (int iter = 0; iter < MAX_ITERATIONS; ++iter) {
+                xn = _mm256_add_ps(_mm256_sub_ps(x2, y2), x0);
+                yn = _mm256_add_ps(_mm256_add_ps(xy, xy), y0);
+
+                x2 = _mm256_mul_ps(xn, xn);
+                y2 = _mm256_mul_ps(yn, yn);
+                xy = _mm256_mul_ps(xn, yn);
+                                                                                                  //* a < b macro!
+                __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(x2, y2), _mm256_set1_ps(MAX_RADIUS_SQR), _CMP_LT_OQ);
+                int mask   = _mm256_movemask_ps(cmp);
+                if (!mask) break;
+                                                          //* 0 or 1 after cmp check
+                iterations = _mm256_add_epi32(iterations, _mm256_and_si256(_mm256_castps_si256(cmp), _1));
+            }
+
+            unsigned int iter_counts[8] = {};
+            _mm256_storeu_si256((__m256i*)iter_counts, iterations);
+
+            for (int i = 0; i < 8; ++i) {
+                int index = (y * WIDTH + x + i) * 4;
+
+                unsigned char color[4] = {0, 0, 0, TWO_HUNDRED_FIFTY_FIVE};
+                if (iter_counts[i] < MAX_ITERATIONS) {
+                    const float t = (float)iter_counts[i] / MAX_ITERATIONS;
+                    GetColorByIteration(color, t);
+                }
+
+                SetColor(pixels, color, index);
+            }
+        }
+    }
+}
+
 void KeyboardPressAction(sf::RenderWindow* window, int* x_center, int* y_center, float* zoom) {
     assert(window != NULL && x_center != NULL && y_center != NULL && zoom != NULL && "Null pointer was passed!\n");
 
@@ -150,7 +204,8 @@ ReturnCodes DrawMandelbrot(const char* font_name) {
 
         KeyboardPressAction(&window, &x_center, &y_center, &zoom);
 
-        MadelbrotSlowRealization(pixels, x_center, y_center, zoom);
+        //MadelbrotSlowRealization(pixels, x_center, y_center, zoom);
+        MadelbrotFastRealization(pixels, x_center, y_center, zoom);
 
         texture.update(pixels);
         window.clear();
