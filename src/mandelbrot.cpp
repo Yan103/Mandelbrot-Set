@@ -1,24 +1,29 @@
 #include "mandelbrot.h"
 
-static void GetColorByIteration(unsigned char* color, float res_for_color) {
-    assert(color != NULL && "Null pointer was passed!\n");
+static ReturnCodes GetColorByIteration(unsigned char* color, float res_for_color) {
+    assert(color != NULL && "Null pointer [color] was passed!\n");
 
-    color[0] = CONSTANT_FOR_RED   * (1 - res_for_color) *      res_for_color  *      res_for_color  * res_for_color * TWO_HUNDRED_FIFTY_FIVE;
-    color[1] = CONSTANT_FOR_GREEN * (1 - res_for_color) * (1 - res_for_color) *      res_for_color  * res_for_color * TWO_HUNDRED_FIFTY_FIVE;
-    color[2] = CONSTANT_FOR_BLUE *  (1 - res_for_color) * (1 - res_for_color) * (1 - res_for_color) * res_for_color * TWO_HUNDRED_FIFTY_FIVE;
+    color[0] = 9    * (1 - res_for_color) *      res_for_color  *      res_for_color  * res_for_color * 255;
+    color[1] = 15   * (1 - res_for_color) * (1 - res_for_color) *      res_for_color  * res_for_color * 255;
+    color[2] = 8.5  * (1 - res_for_color) * (1 - res_for_color) * (1 - res_for_color) * res_for_color * 255;
+
+    return SUCCESS;
 }
 
-static void SetColor(unsigned char* pixels, unsigned char* color, int index) {
-    assert(pixels != NULL && color != NULL && "Null pointer was passed!\n");
+static ReturnCodes SetColor(unsigned char* pixels, unsigned char* color, int index) {
+    assert(pixels != NULL && "Null pointer [pixels] was passed!\n");
+    assert(color  != NULL && "Null pointer [color] was passed!\n");
 
     pixels[index    ] = color[0];
     pixels[index + 1] = color[1];
     pixels[index + 2] = color[2];
     pixels[index + 3] = color[3];
+
+    return SUCCESS;
 }
 
-void MadelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center, float zoom) {
-    assert(pixels != NULL && "Null pointer was passed!\n"); 
+ReturnCodes MandelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center, float zoom) {
+    assert(pixels != NULL && "Null pointer [pixels] was passed!\n"); 
 
     for (int y = 0; y < HEIGHT; ++y) {
         for (int x = 0; x < WIDTH; ++x) {
@@ -42,7 +47,7 @@ void MadelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center,
                 }
             }
 
-            unsigned char color[4] = {0, 0, 0, TWO_HUNDRED_FIFTY_FIVE};            //* Default black color
+            unsigned char color[4] = {0, 0, 0, 255};            //* Default black color
             if (iteration < MAX_ITERATIONS) {
                 float res_for_color = (float)iteration / MAX_ITERATIONS;
                 GetColorByIteration(color, res_for_color);
@@ -51,10 +56,12 @@ void MadelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center,
             SetColor(pixels, color, (y * WIDTH + x) * 4);
         }
     }
+
+    return SUCCESS;
 }
 
-void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center, float zoom) {
-    assert(pixels != NULL && "Null pointer was passed!\n"); 
+ReturnCodes MandelbrotFastRealization(unsigned char* pixels, int x_center, int y_center, float zoom) {
+    assert(pixels != NULL && "Null pointer [pixels] was passed!\n"); 
 
     for (int y = 0; y < HEIGHT; ++y) {
         for (int x = 0; x < WIDTH; x += 8) {
@@ -83,7 +90,7 @@ void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center,
                 xy = _mm256_mul_ps(xn, yn);
                                                                                                   //* a < b macro!
                 __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(x2, y2), _mm256_set1_ps(MAX_RADIUS_SQR), _CMP_LT_OQ);
-                int mask   = _mm256_movemask_ps(cmp);
+                unsigned int mask   = _mm256_movemask_ps(cmp);
                 if (!mask) break;
                                                           //* 0 or 1 after cmp check
                 iterations = _mm256_add_epi32(iterations, _mm256_and_si256(_mm256_castps_si256(cmp), _1));
@@ -95,7 +102,7 @@ void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center,
             for (int i = 0; i < 8; ++i) {
                 int index = (y * WIDTH + x + i) * 4;
 
-                unsigned char color[4] = {0, 0, 0, TWO_HUNDRED_FIFTY_FIVE};
+                unsigned char color[4] = {0, 0, 0, 255};
                 if (iter_counts[i] < MAX_ITERATIONS) {
                     const float t = (float)iter_counts[i] / MAX_ITERATIONS;
                     GetColorByIteration(color, t);
@@ -105,48 +112,65 @@ void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center,
             }
         }
     }
+
+    return SUCCESS;
 }
 
-void KeyboardPressAction(sf::RenderWindow* window, int* x_center, int* y_center, float* zoom) {
-    assert(window != NULL && x_center != NULL && y_center != NULL && zoom != NULL && "Null pointer was passed!\n");
-
+ReturnCodes KeyboardPressAction(sf::RenderWindow* window, int* x_center, int* y_center, float* zoom) {
+    assert(window   != NULL && "Null pointer [window] was passed!\n"); 
+    assert(x_center != NULL && "Null pointer [x_center] was passed!\n"); 
+    assert(y_center != NULL && "Null pointer [y_center] was passed!\n"); 
+    assert(zoom     != NULL && "Null pointer [zoom] was passed!\n"); 
+ 
     sf::Event event;
     while (window->pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window->close();
-        } 
-        else if (event.type == sf::Event::KeyPressed) {         //* ya mb ne pon, no vot'
+            return SUCCESS;
+        }      
+        else if (event.type == sf::Event::KeyPressed) {
         switch (event.key.code) {
             case sf::Keyboard::Right:
                 *x_center += X_OFFSET_CONSTANT;
-                break;
+                return SUCCESS;
+
             case sf::Keyboard::Left:
                 *x_center -= X_OFFSET_CONSTANT;
-                break;
+                return SUCCESS;
+
             case sf::Keyboard::Up:
                 *y_center -= Y_OFFSET_CONSTANT;
-                break;
+                return SUCCESS;
+
             case sf::Keyboard::Down:
                 *y_center += Y_OFFSET_CONSTANT;
-                break;
+                return SUCCESS;
+
             case sf::Keyboard::Dash:    //* "-" keyboard
                 *zoom     /= ZOOM_CONSTANT;
-                break;
+                return SUCCESS;
+
             case sf::Keyboard::Equal:   //* "=" keyboard
                 *zoom     *= ZOOM_CONSTANT;
-                break;
+                return SUCCESS;
+
             case sf::Keyboard::Escape:
                 window->close();
-                break;
+                return SUCCESS;
+
             default:
-                break;                  //* error check?!?
-            }            
-        }
+                fprintf(stderr, RED("Unknown operation!\n"));
+                return ERROR;  
+            }               
+        }            
     }
+
+    return ERROR;
 }
 
-ReturnCodes DrawMandelbrot(const char* font_name) {
-    assert(font_name != NULL && "Null pointer was passed!\n");
+ReturnCodes DrawMandelbrot(const char* font_name, CalculateFunction CalcMandelbrotFunc) {
+    assert(font_name          != NULL && "Null pointer [font_name] was passed!\n");
+    assert(CalcMandelbrotFunc != NULL && "Null pointer [CalcMandelbrotFunc] was passed!\n");
 
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Mandelbrot Set");
                                                                     
@@ -204,8 +228,7 @@ ReturnCodes DrawMandelbrot(const char* font_name) {
 
         KeyboardPressAction(&window, &x_center, &y_center, &zoom);
 
-        //MadelbrotSlowRealization(pixels, x_center, y_center, zoom);
-        MadelbrotFastRealization(pixels, x_center, y_center, zoom);
+        CalcMandelbrotFunc(pixels, x_center, y_center, zoom);
 
         texture.update(pixels);
         window.clear();

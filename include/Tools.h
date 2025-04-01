@@ -1,6 +1,7 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include <assert.h>
 #include <stdlib.h>
 
 #define END         "\033[0;0m"                             //* Add colour outputs in my program :)

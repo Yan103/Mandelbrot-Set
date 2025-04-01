@@ -1,7 +1,6 @@
 #ifndef MANDELBROT_H
 #define MANDELBROT_H
 
-#include <assert.h>
 #include <SFML/Graphics.hpp>
 #include <immintrin.h>
 
@@ -22,20 +21,17 @@ const int           DEFAULT_X_CENTER       = 0;
 const int           DEFAULT_Y_CENTER       = 0;
 const float         DEFAULT_ZOOM           = 200.0f;
 
-const float         CONSTANT_FOR_RED       = 9;
-const float         CONSTANT_FOR_GREEN     = 15;
-const float         CONSTANT_FOR_BLUE      = 8.5;
-const int           TWO_HUNDRED_FIFTY_FIVE = 255;
-
 const unsigned int  FONT_SIZE              = 20;
 const float         TEXT_POSITION          = 10;
 
-void KeyboardPressAction(sf::RenderWindow* window, int* x_center, int* y_center, float* zoom);
+typedef ReturnCodes (*CalculateFunction)(unsigned char* pixels, int x_center, int y_center, float zoom);
 
-void MadelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center, float zoom);
+ReturnCodes KeyboardPressAction(sf::RenderWindow* window, int* x_center, int* y_center, float* zoom);
 
-void MadelbrotFastRealization(unsigned char* pixels, int x_center, int y_center, float zoom);
+ReturnCodes MandelbrotSlowRealization(unsigned char* pixels, int x_center, int y_center, float zoom);
 
-ReturnCodes DrawMandelbrot(const char* font_name);
+ReturnCodes MandelbrotFastRealization(unsigned char* pixels, int x_center, int y_center, float zoom);
+
+ReturnCodes DrawMandelbrot(const char* font_name, CalculateFunction CalcMandelbrotFunc);
 
 #endif // MANDELBROT_H
