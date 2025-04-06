@@ -1,8 +1,16 @@
 #ifndef TESTER_H
 #define TESTER_H
 
+#include <x86intrin.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <assert.h>
+
 #include "Tools.h"
 #include "mandelbrot.h"
+
+#define WARMUP_COUNT 10
 
 typedef struct __TestCase{
     int   arg1;

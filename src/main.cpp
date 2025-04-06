@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
                 flag = 1;
 
                 printf(GREEN("Start tests...\n"));
-                MandelbrotTestingFunction(MandelbrotSlowRealization, "tests/tests.txt", "tests/slow_results.txt");
+                MandelbrotTestingFunction(MandelbrotSlowRealization, "tests/tests2.txt", "tests/slow_results2.txt");
                 printf(GREEN("All tests passed successfully\n"));
                 break;
 

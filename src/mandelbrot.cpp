@@ -174,7 +174,7 @@ ReturnCodes DrawMandelbrot(const char* font_name, CalculateFunction CalcMandelbr
 
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Mandelbrot Set");
                                                                     
-    //* R|G|B and A (прозрачность)
+                                                                //* R|G|B and A (прозрачность)
     unsigned char* pixels = (unsigned char*)calloc(WIDTH * HEIGHT * 4, sizeof(unsigned char));
     if (!pixels) {
         fprintf(stderr, RED("Memory error!\n"));

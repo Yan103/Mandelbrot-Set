@@ -1,8 +1,4 @@
 #include "tester.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <assert.h>
 
 const size_t TEST_COUNT = 5;
 
@@ -47,10 +43,7 @@ ReturnCodes MandelbrotTestingFunction(CalculateFunction CalculateFunc, const cha
     }
 
     for (size_t i = 0; i < num_tests; i++) {
-        if (fscanf(tests_file, "%d %d %f",
-                                &tests[i].arg1,
-                                &tests[i].arg2,
-                                &tests[i].arg3) != 3) {
+        if (fscanf(tests_file, "%d %d %f", &tests[i].arg1, &tests[i].arg2, &tests[i].arg3) != 3) {
             FREE(tests);
             FREE(pixels);
             fclose(tests_file);
@@ -60,16 +53,20 @@ ReturnCodes MandelbrotTestingFunction(CalculateFunction CalculateFunc, const cha
     }
     fclose(tests_file);
 
-    clock_t start_time = 0;
+    //* cash warmup before main tests
+    for (size_t warmup = 0; warmup < WARMUP_COUNT; warmup++) {
+        CalculateFunc(pixels, tests[0].arg1, tests[0].arg2, tests[0].arg3);
+    }
+    printf(GREEN("Warmup end!\n"));
+
+    uint64_t start = 0;
     for (size_t i = 0; i < num_tests; i++) {        
         for (size_t run = 0; run < TEST_COUNT; run++) {
-            start_time = clock();
+            start = __rdtsc();
             
             CalculateFunc(pixels, tests[i].arg1, tests[i].arg2, tests[i].arg3);
             
-            double duration_ms = ((double)(clock() - start_time) * 1000) / CLOCKS_PER_SEC;
-            
-            fprintf(results_file, "Test %lu [Run %lu]: %.3f ms\n", i + 1, run + 1, duration_ms);
+            fprintf(results_file, "Test %lu [Run %lu]: %.3lld tacts\n", i + 1, run + 1, __rdtsc() - start);
         }
     }
 

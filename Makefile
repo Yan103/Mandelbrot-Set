@@ -29,3 +29,6 @@ run: $(EXECUTABLE)
 
 clean:
 	@rm -rf $(OBJ_DIR) $(BIN_DIR)
+
+graph:
+	@ python3 DrawGraph.py tests/slow_results2.txt tests/fast_results2.txt 
